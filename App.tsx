@@ -11,8 +11,11 @@ const API_URL = 'https://jsonplaceholder.typicode.com/posts';
 const App = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [counter, setCounter] = useState(0);
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -23,15 +26,15 @@ const App = () => {
     if (result === RESULTS.GRANTED) {
       console.log('Notification permission is already granted');
       initializePushNotifications();
-      fetchData(); 
+      fetchData(1); 
     } else {
       const requestResult = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
       if (requestResult === RESULTS.GRANTED) {
         console.log('Notification permission granted');
         initializePushNotifications();
-        fetchData(); 
+        fetchData(1); 
       } else {
-        fetchData()
+        fetchData(1);
         console.log('Notification permission denied');
       }
     }
@@ -72,16 +75,28 @@ const App = () => {
     }
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (pageNumber = 1) => {
+    if (loading || loadingMore) return;
+    if (pageNumber === 1) setLoading(true); 
+    else setLoadingMore(true);
+    
     sendNotification('FETCHING DATA');
     try {
-      const response = await axios.get(API_URL);
-      setData(response.data);
+      const response = await axios.get(`${API_URL}?_page=${pageNumber}&_limit=10`);
+      const newPosts = response.data;
+
+      if (pageNumber === 1) {
+        setData(newPosts);
+      } else {
+        setData((prevData) => [...prevData, ...newPosts]);
+      }
+
+      setHasMore(newPosts.length === 10); 
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       sendNotification('FETCHING DATA COMPLETE');
     }
   };
@@ -100,10 +115,29 @@ const App = () => {
   const renderItem = useCallback(({ item }) => (
     <TouchableOpacity onPress={() => handleItemPress(item.id)}>
       <View style={styles.itemContainer}>
-        <Text>{item?.id} {item.title}</Text>
+        <Text>{item?.id} {item?.title}</Text>
       </View>
     </TouchableOpacity>
   ), [handleItemPress]);
+
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      setPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        fetchData(nextPage);
+        return nextPage;
+      });
+    }
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="large" color="blue" />
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -122,6 +156,9 @@ const App = () => {
             data={data}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
           />
           {selectedPostId && <ChildComponent postId={selectedPostId} />}
         </>
@@ -148,6 +185,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  footer: {
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
