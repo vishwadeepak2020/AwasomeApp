@@ -1,52 +1,59 @@
-import React, { memo, useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
-const ChildComponent = ({ item }) => {
-  const [details, setDetails] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
+const ChildComponent = ({ postId }) => {
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const fetchDetails = async () => {
-    if (showDetails) {
-     
-      setShowDetails(false);
-      setDetails(null);
-    } else {
-    
-      try {
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/posts/${item.id}`);
-        setDetails(response.data);
-        setShowDetails(true);
-      } catch (error) {
-        console.error(error);
-      }
+  useEffect(() => {
+    fetchPostDetails();
+  }, [postId]);
+
+  const fetchPostDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`https://jsonplaceholder.typicode.com/posts/${postId}`);
+      setPost(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('Child component re-rendered');
-  });
+    console.log('ChildComponent re-rendered due to changes in props');
+  }, [postId]);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="blue" />;
+  }
+
+  if (!post) {
+    return null;
+  }
 
   return (
-    <View style={styles.itemContainer}>
-      <Text>{item.id}: {item.title}</Text>
-      <Button title={showDetails ? "Hide Details" : "View Details"} onPress={fetchDetails} color={showDetails ? "red":null }/>
-      {showDetails && details && (
-        <View>
-          <Text>{details.body}</Text>
-        </View>
-      )}
+    <View style={styles.container}>
+      <Text style={styles.title}>{post.title}</Text>
+      <Text>{post.body}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  itemContainer: {
-    padding: 8,
-    marginVertical: 4,
+  container: {
+    padding: 16,
+    marginTop: 16,
     backgroundColor: '#f9f9f9',
-    borderRadius: 4,
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
 });
 
-export default memo(ChildComponent);
+export default ChildComponent;

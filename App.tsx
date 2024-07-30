@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Button, FlatList, StyleSheet, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import PushNotification from 'react-native-push-notification';
@@ -12,7 +12,7 @@ const App = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [counter, setCounter] = useState(0);
-  
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -93,9 +93,17 @@ const App = () => {
     });
   };
 
+  const handleItemPress = useCallback((postId) => {
+    setSelectedPostId(prevPostId => prevPostId === postId ? null : postId);
+  }, []);
+
   const renderItem = useCallback(({ item }) => (
-    <ChildComponent item={item} />
-  ), []);
+    <TouchableOpacity onPress={() => handleItemPress(item.id)}>
+      <View style={styles.itemContainer}>
+        <Text>{item?.id} {item.title}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [handleItemPress]);
 
   return (
     <View style={styles.container}>
@@ -109,11 +117,14 @@ const App = () => {
           <ActivityIndicator size={"large"} color={"blue"} />
         </View>
       ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-        />
+        <>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+          />
+          {selectedPostId && <ChildComponent postId={selectedPostId} />}
+        </>
       )}
     </View>
   );
@@ -132,6 +143,11 @@ const styles = StyleSheet.create({
   },
   counter: {
     fontSize: 24,
+  },
+  itemContainer: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
 });
 
