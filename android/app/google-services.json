@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "529138118291",
+    "project_id": "awasomedemo-5d177",
+    "storage_bucket": "awasomedemo-5d177.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529138118291:android:46f66ce4750e7a0e846766",
+        "android_client_info": {
+          "package_name": "com.awasomedemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDW1Lnnw_tgWFOCcBLsSvC7U6wr-jpEHxc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

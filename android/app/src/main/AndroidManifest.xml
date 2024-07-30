@@ -1,15 +1,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  
 
-    <application
-      android:name=".MainApplication"
-      android:label="@string/app_name"
-      android:icon="@mipmap/ic_launcher"
-      android:roundIcon="@mipmap/ic_launcher_round"
-      android:allowBackup="false"
-      android:theme="@style/AppTheme">
-      <activity
+  <application
+    android:name=".MainApplication"
+    android:label="@string/app_name"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher_round"
+    android:allowBackup="false"
+    android:theme="@style/AppTheme">
+
+    <meta-data
+        android:name="com.dieam.reactnativepushnotification.notification_foreground"
+        android:value="false"/>
+    <meta-data
+        android:name="com.dieam.reactnativepushnotification.notification_color"
+        android:resource="@color/white"/>
+
+    <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
         android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
@@ -20,6 +32,33 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
-      </activity>
-    </application>
+    </activity>
+
+    <!-- Add receivers for push notifications -->
+    <receiver 
+        android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationActions" 
+        android:exported="true" /> <!-- Specify exported for actions receiver -->
+    <receiver 
+        android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" 
+        android:exported="true" /> <!-- Specify exported for publisher receiver -->
+    <receiver 
+        android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver" 
+        android:exported="true"> <!-- Specify exported for boot event receiver -->
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+        </intent-filter>
+    </receiver>
+
+    <!-- Service for handling incoming FCM messages -->
+    <service
+        android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService"
+        android:exported="false"> <!-- Leave this as false for security -->
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>
+
+  </application>
 </manifest>

@@ -1,9 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+// import React from 'react';
+// import { Provider } from 'react-redux';
+// import { PersistGate } from 'redux-persist/integration/react';
+// import { store, persistor } from './src/redux/store'; // Adjust the path to your store
+// import TodoApp from './src/screen/TodoApp'; // Adjust the path to your TodoApp component
+
+// const App = () => {
+//   return (
+//     <Provider store={store}>
+//       <PersistGate loading={null} persistor={persistor}>
+//         <TodoApp />
+//       </PersistGate>
+//     </Provider>
+//   );
+// };
+
+// export default App;
+
+// eslint-disable-next-line prettier/prettier
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, Button, FlatList, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import PushNotification from 'react-native-push-notification';
-import PushNotificationIOS from '@react-native-community/push-notification-ios'; // Add this import for iOS support
 import ChildComponent from './src/component/ChildComponent';
 
 const API_URL = 'https://jsonplaceholder.typicode.com/posts';
@@ -12,49 +30,16 @@ const App = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [counter, setCounter] = useState(0);
-  
 
   useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
-  const requestNotificationPermission = async () => {
-    const result = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
-    if (result === RESULTS.GRANTED) {
-      console.log('Notification permission is already granted');
-      initializePushNotifications();
-      fetchData(); 
-    } else {
-      const requestResult = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
-      if (requestResult === RESULTS.GRANTED) {
-        console.log('Notification permission granted');
-        initializePushNotifications();
-        fetchData(); 
-      } else {
-        fetchData()
-        console.log('Notification permission denied');
-      }
-    }
-  };
-
-  const initializePushNotifications = () => {
     PushNotification.configure({
-      onRegister: function (token) {
-        console.log('TOKEN:', token);
+      onRegister: function(token) {
+        console.log("TOKEN1234:", token); // You can save this token to send notifications from your server
       },
-      onNotification: function (notification) {
-        console.log('NOTIFICATION:', notification);
-        if (Platform.OS === 'ios') {
-          notification.finish(PushNotificationIOS.FetchResult.NoData);
-        }
+      onNotification: function(notification) {
+        console.log("NOTIFICATION:", notification);
       },
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-      popInitialNotification: true,
-      requestPermissions: false,
+      requestPermissions: true, // Request permissions on iOS
     });
 
     if (Platform.OS === 'android') {
@@ -70,7 +55,9 @@ const App = () => {
         (created) => console.log(`createChannel returned '${created}'`) // (optional)
       );
     }
-  };
+
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -93,8 +80,13 @@ const App = () => {
     });
   };
 
+  
+
   const renderItem = useCallback(({ item }) => (
-    <ChildComponent item={item} />
+    <ChildComponent
+      item={item}
+      
+    />
   ), []);
 
   return (
@@ -105,9 +97,7 @@ const App = () => {
         <Button title="+" onPress={() => setCounter(counter + 1)} />
       </View>
       {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size={"large"} color={"blue"} />
-        </View>
+        <Text>Loading...</Text>
       ) : (
         <FlatList
           data={data}
@@ -136,3 +126,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
